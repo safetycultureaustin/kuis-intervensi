@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Intervensi - Austin Indonesia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2b61e4;
+            --light-blue: #eef2ff;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --correct-bg: #e8f7ed;
+            --correct-border: #22c55e;
+            --correct-text: #166534;
+            --wrong-bg: #fef2f2;
+            --wrong-border: #ef4444;
+            --wrong-text: #991b1b;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; width: 95%; max-width: 750px; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+
+        /* --- HALAMAN DEPAN --- */
+        .logo { max-width: 180px; margin-bottom: 25px; }
+        .main-title { font-size: 32px; font-weight: 700; color: var(--text-main); margin: 0; line-height: 1.2; }
+        .sub-title { font-size: 32px; font-weight: 700; color: var(--text-main); margin: 5px 0 25px 0; line-height: 1.2; }
+        .target-text { font-size: 16px; color: var(--text-sub); margin-bottom: 5px; font-weight: 500; }
+        .creator-text { font-size: 14px; color: var(--text-sub); text-decoration: underline; margin-bottom: 40px; display: block; }
+        
+        /* --- QUIZ UI --- */
+        #quiz-section { display: none; text-align: left; }
+        .header-quiz { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .quiz-title { color: var(--primary-blue); font-weight: 700; font-size: 18px; }
+        .progress-container { height: 6px; background: #eee; border-radius: 10px; margin-bottom: 25px; }
+        .progress-bar { height: 100%; background: var(--primary-blue); border-radius: 10px; width: 0%; transition: 0.3s; }
+
+        .nav-numbers { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+        .num-box { width: 38px; height: 38px; border: 1px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer; background: white; transition: 0.2s; }
+        .num-box.active { border: 2px solid var(--primary-blue); color: var(--primary-blue); }
+        .num-box.answered-correct { background: var(--correct-bg); color: var(--correct-text); border-color: var(--correct-border); }
+        .num-box.answered-wrong { background: var(--wrong-bg); color: var(--wrong-text); border-color: var(--wrong-border); }
+
+        .question-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 25px; line-height: 1.4; }
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        .opt-item { padding: 18px; border: 1.5px solid var(--border-color); border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.2s; background: white; }
+        .opt-item.selected { background: var(--light-blue); border-color: var(--primary-blue); }
+        .opt-item.correct { background: #f0fdf4 !important; border-color: #22c55e !important; color: #166534 !important; font-weight: 600; }
+        .opt-item.wrong { background: #fef2f2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+
+        /* KOTAK KETERANGAN */
+        .result-box { display: none; padding: 20px; border-radius: 10px; margin-top: 20px; font-size: 16px; line-height: 1.5; border: 1px solid transparent; }
+        .result-box.correct { display: block; background: var(--correct-bg); color: var(--correct-text); border-color: var(--correct-border); }
+        .result-box.wrong { display: block; background: var(--wrong-bg); color: var(--wrong-text); border-color: var(--wrong-border); }
+        .result-box b { display: block; margin-bottom: 5px; font-size: 18px; }
+
+        .footer-btns { display: flex; justify-content: space-between; align-items: center; margin-top: 35px; border-top: 1px solid #eee; padding-top: 25px; }
+        .btn-action { padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; border: none; font-size: 15px; }
+        .btn-mulai { background: var(--primary-blue); color: white; width: 100%; padding: 18px; font-size: 18px; }
+        .btn-check { background: var(--primary-blue); color: white; min-width: 140px; }
+        .btn-retry { background: #64748b; color: white; margin-right: 10px; }
+        .btn-next { background: var(--primary-blue); color: white; min-width: 140px; }
+        .btn-prev { background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="card">
+        <img src="https://www.austineng.com/wp-content/uploads/2021/04/Austin-Logo-High-Res.png" class="logo" alt="austin">
+        <div class="main-title">Kuis Keselamatan Kerja</div>
+        <div class="sub-title">Intervensi Di Tempat Kerja</div>
+        <p class="target-text">Dipersiapkan untuk seluruh Karyawan</p>
+        <span class="creator-text">(Dibuat oleh Departemen SHE Austin - Indonesia)</span>
+        <button class="btn-action btn-mulai" onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+
+    <div id="quiz-section" class="card">
+        <div class="header-quiz">
+            <div id="q-category" class="quiz-title">Kuis Intervensi</div>
+            <div id="q-status" class="q-count"></div>
+        </div>
+        <div class="progress-container"><div id="bar" class="progress-bar"></div></div>
+        <div id="numbers" class="nav-numbers"></div>
+        <div id="question-txt" class="question-title"></div>
+        <div id="opts" class="options-list"></div>
+        <div id="result-info" class="result-box"></div>
+
+        <div class="footer-btns">
+            <button id="prev-btn" class="btn-action btn-prev" onclick="move(-1)">Sebelumnya</button>
+            <div style="display: flex;">
+                <button id="retry-btn" class="btn-action btn-retry" style="display:none;" onclick="resetQ()">Coba Lagi</button>
+                <button id="check-btn" class="btn-action btn-check" onclick="verify()">Check Jawaban</button>
+                <button id="next-btn" class="btn-action btn-next" style="display:none;" onclick="move(1)">Berikutnya</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { q: "1. Anda melihat beban angkut (lifting) melewati jalur pejalan kaki. Tindakan intervensi tercepat adalah...", a: 0, opts: ["A. Menghentikan pergerakan crane/beban dan meminta area steril kembali.", "B. Berlari menjauh sendirian tanpa mempedulikan orang lain.", "C. Menunggu beban lewat baru menegur rigger di akhir shift.", "D. Menelepon kantor SHE untuk menanyakan prosedur yang benar."], expl: "Intervensi harus dilakukan segera untuk mencegah bahaya fatal sebelum terjadi kontak." },
+            { q: "2. Intervensi yang efektif adalah intervensi yang fokus pada...", a: 1, opts: ["A. Mencari siapa yang paling senior di area tersebut.", "B. Tindakan atau kondisi tidak amannya, bukan menyalahkan individu secara pribadi.", "C. Hukuman atau sanksi administrasi yang akan diterima pekerja.", "D. Menunjukkan kekuasaan kita sebagai petugas keselamatan."], expl: "Fokus pada perilaku membantu orang menerima teguran tanpa merasa diserang." },
+            { q: "3. Apa tujuan utama dari melakukan intervensi keselamatan saat melihat tindakan tidak aman?", a: 2, opts: ["A. Menambah catatan pelanggaran karyawan untuk data HRD.", "B. Membuktikan bahwa kita lebih paham aturan daripada orang lain.", "C. Mencegah terjadinya cedera sebelum risiko berubah menjadi insiden nyata.", "D. Memenuhi kewajiban administratif agar terlihat bekerja."], expl: "Tujuan utama intervensi adalah keselamatan nyawa, bukan mencari kesalahan." },
+            { q: "4. Siapa yang memiliki hak dan kewajiban untuk menggunakan 'Stop Work Authority' jika melihat bahaya fatal?", a: 3, opts: ["A. Hanya Manager SHE dan tim audit.", "B. Hanya Supervisor atau pimpinan regu di area tersebut.", "C. Petugas keamanan (Security) yang sedang berjaga.", "D. Seluruh karyawan tanpa terkecuali, demi keselamatan bersama."], expl: "Setiap orang di Austin Indonesia berhak menghentikan pekerjaan berbahaya." },
+            { q: "5. Apa yang harus Anda lakukan jika melihat kondisi tidak aman (misal: tumpahan oli) tapi tidak ada orang di area tersebut?", a: 2, opts: ["A. Memotretnya lalu membiarkannya sampai ada orang yang terpeleset.", "B. Mengabaikannya karena bukan area kerja yang ditugaskan kepada saya.", "C. Menandai area dan memastikan tumpahan segera ditangani agar tidak mencelakai orang lain.", "D. Menunggu rapat mingguan untuk melaporkan kondisi tersebut."], expl: "Kepedulian (Ownership) berarti menjaga lingkungan kerja tetap aman bagi siapa pun." },
+            { q: "6. Mengapa kondisi 'sudah biasa/terbiasa' (normalisasi penyimpangan) sangat berbahaya?", a: 3, opts: ["A. Karena membuat alat kerja menjadi lebih cepat aus.", "B. Karena melanggar jam operasional perusahaan yang sudah ditentukan.", "C. Karena membuat suasana kerja menjadi terlalu santai.", "D. Karena menghilangkan kewaspadaan kita terhadap bahaya yang ada di depan mata."], expl: "Kebiasaan buruk yang dibiarkan akan dianggap normal sampai akhirnya terjadi kecelakaan." },
+            { q: "7. Kapan waktu yang paling tepat untuk melakukan intervensi terhadap tindakan tidak aman?", a: 0, opts: ["A. Seketika saat itu juga sebelum kecelakaan terjadi.", "B. Setelah jam kerja selesai agar tidak mengganggu target produksi.", "C. Saat rapat koordinasi bulanan di kantor pusat.", "D. Menunggu instruksi resmi dari atasan masing-masing."], expl: "Satu detik penundaan bisa berakibat fatal. Intervensi harus dilakukan instan." },
+            { q: "8. Manakah yang merupakan contoh intervensi terhadap integritas peralatan (tools)?", a: 1, opts: ["A. Memarahi rekan kerja yang meminjam alat tanpa izin.", "B. Menolak penggunaan webbing sling yang tersayat dan meminta penggantian segera.", "C. Menyembunyikan alat yang rusak di dalam loker pribadi.", "D. Memperbaiki peralatan listrik sendiri tanpa sertifikasi resmi."], expl: "Memastikan alat laik pakai adalah bagian kunci dari keselamatan kerja." },
+            { q: "9. Jika intervensi Anda diabaikan dan pekerja tetap melanjutkan tindakan berbahaya, langkah apa yang diambil?", a: 2, opts: ["A. Membiarkannya karena itu adalah pilihan hidupnya.", "B. Menertawakannya saat terjadi insiden di kemudian hari.", "C. Segera melibatkan pengawas atau supervisor area untuk kendali risiko lebih lanjut.", "D. Langsung mengundurkan diri dari perusahaan."], expl: "Jangan biarkan bahaya berlanjut; eskalasikan ke atasan jika teguran langsung tidak diindahkan." },
+            { q: "10. Tanda utama bahwa budaya intervensi di Austin Indonesia sudah berjalan baik adalah...", a: 3, opts: ["A. Pekerja merasa takut saat petugas SHE lewat.", "B. Banyaknya surat teguran tertulis yang diterbitkan setiap hari.", "C. Semua orang bekerja tanpa saling menegur satu sama lain.", "D. Karyawan merasa dihargai dan berterima kasih saat diingatkan tentang keselamatannya."], expl: "Saling menghargai saat diingatkan adalah puncak dari budaya keselamatan." },
+            { q: "11. Intervensi keselamatan dari rekan kerja kepada kita sebenarnya adalah bentuk...", a: 3, opts: ["A. Upaya untuk menjatuhkan kredibilitas kita di depan pimpinan.", "B. Cara rekan kerja untuk terlihat lebih rajin dari kita.", "C. Campur tangan urusan pribadi yang tidak perlu.", "D. Kepedulian agar kita bisa pulang dengan selamat menemui keluarga di rumah."], expl: "Ingatlah bahwa rekan Anda ingin Anda pulang dalam kondisi sehat dan utuh." },
+            { q: "12. Apa respon paling profesional saat ditegur rekan karena lupa mengunci body harness di ketinggian?", a: 1, opts: ["A. Mengabaikannya karena kita sudah bekerja lebih dari 10 tahun.", "B. Segera mengunci harness dan berterima kasih karena telah diingatkan.", "C. Marah karena merasa dipermalukan di depan rekan yang lain.", "D. Mencari-cari kesalahan balik pada orang yang menegur tersebut."], expl: "Masa kerja lama bukan jaminan kebal dari kecelakaan. Segera perbaiki tindakan." },
+            { q: "13. Mengapa kita harus terbuka terhadap kritik keselamatan bahkan dari rekan yang lebih junior?", a: 0, opts: ["A. Karena kecelakaan tidak melihat tingkat jabatan atau masa kerja seseorang.", "B. Agar kita tidak dilaporkan ke departemen HRD.", "C. Karena itu adalah formalitas yang harus dilakukan.", "D. Supaya kuis ini mendapatkan skor yang bagus."], expl: "Junior bisa melihat bahaya yang mungkin luput dari penglihatan senior." },
+            { q: "14. Jika Anda dihentikan bekerja karena tindakan yang dianggap 'NGAWOOR', sikap yang benar adalah...", a: 2, opts: ["A. Langsung berhenti bekerja dan tidak mau melanjutkannya lagi.", "B. Berdebat keras untuk membuktikan bahwa cara kita lebih cepat.", "C. Berhenti sejenak, mengevaluasi risiko bersama, dan memperbaiki cara kerja.", "D. Melaporkan orang yang menghentikan kita sebagai penghambat produksi."], expl: "Tindakan 'NGAWOOR' membahayakan semua orang. Evaluasi sangat penting sebelum lanjut." },
+            { q: "15. Apa yang harus ditanamkan dalam pikiran saat menerima intervensi dari orang lain?", a: 1, opts: ["A. 'Dia hanya ingin pamer kekuasaan.'", "B. 'Orang ini mungkin baru saja menyelamatkan hidup saya hari ini.'", "C. 'Saya harus berhati-hati agar tidak terlihat salah lagi.'", "D. 'Peraturan ini hanya menyusahkan pekerja lapangan.'"], expl: "Setiap intervensi adalah peluang untuk menghindari maut." },
+            { q: "16. Manakah kalimat intervensi yang paling mencerminkan budaya 'Care & Ownership'?", a: 3, opts: ["A. 'Pakai kacamatanya, atau saya lapor ke supervisor sekarang!'", "B. 'Terserah kamu saja, kalau buta jangan salahkan saya ya.'", "C. 'Itu aturannya, kalau mau kerja di sini harus ikut aturan.'", "D. 'Pak, tolong pakai kacamatanya ya, mata Bapak jauh lebih berharga daripada waktu 5 menit ini.'"], expl: "Menghubungkan keselamatan dengan nilai diri/keluarga jauh lebih efektif." },
+            { q: "17. Bagaimana cara memulai intervensi agar tidak memicu konflik atau kemarahan?", a: 2, opts: ["A. Menggunakan suara keras agar terdengar oleh semua orang.", "B. Langsung mematikan mesin yang sedang digunakan rekan tersebut.", "C. Menggunakan pendekatan yang tenang dan fokus pada risiko bahaya yang terlihat.", "D. Mengancam akan memotong gaji jika instruksi tidak diikuti."], expl: "Ketenangan membantu pesan keselamatan diterima dengan logika, bukan emosi." },
+            { q: "18. Apa yang sebaiknya dilakukan setelah memberikan teguran keselamatan kepada rekan?", a: 3, opts: ["A. Membiarkannya begitu saja tanpa mengecek kembali.", "B. Memberikan ceramah panjang tentang teori keselamatan kerja.", "C. Menulis namanya di papan pelanggaran sebagai efek jera.", "D. Memastikan tindakan aman sudah dilakukan, lalu memberikan apresiasi atau terima kasih."], expl: "Apresiasi menguatkan perilaku aman untuk jangka panjang." },
+            { q: "19. Saat menegur rekan yang jauh lebih senior, pendekatan mana yang paling tepat digunakan?", a: 2, opts: ["A. Memaksa mereka mengikuti aturan karena kita merasa lebih benar.", "B. Diam saja karena tidak enak hati menegur orang tua/senior.", "C. Menggunakan bahasa yang sopan dan menekankan bahwa kita ingin mereka tetap sehat sampai pensiun.", "D. Melaporkan secara diam-diam tanpa berbicara langsung kepada mereka."], expl: "Sopan santun dan kepedulian adalah kunci menghadapi senioritas." },
+            { q: "20. Dalam melakukan intervensi, nada bicara yang tenang sangat krusial karena...", a: 2, opts: ["A. Menunjukkan bahwa kita tidak peduli dengan situasinya.", "B. Agar suara kita tidak habis karena sering berteriak.", "C. Membantu menjaga komunikasi tetap positif dan mencegah pertengkaran di lapangan.", "D. Menandakan bahwa kita adalah orang yang sangat sabar."], expl: "Nada bicara yang tenang mencegah terjadinya pertengkaran yang tidak perlu di area kerja." }
+        ];
+
+        let index = 0;
+        let chosen = null;
+        let statusMap = Array(quizData.length).fill(null);
+
+        function startQuiz() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-section').style.display = 'block';
+            loadQ();
+        }
+
+        function loadQ() {
+            const data = quizData[index];
+            document.getElementById('q-status').innerText = `Pertanyaan ${index + 1} dari ${quizData.length}`;
+            document.getElementById('bar').style.width = `${((index + 1) / quizData.length) * 100}%`;
+            document.getElementById('question-txt').innerText = data.q;
+            
+            // Kategori Header
+            const catHeader = document.getElementById('q-category');
+            if(index < 10) catHeader.innerText = "Bagian 1: Pemahaman Intervensi";
+            else if(index < 15) catHeader.innerText = "Bagian 2: Sikap Menerima Intervensi";
+            else catHeader.innerText = "Bagian 3: Cara Menegur yang Benar";
+
+            document.getElementById('result-info').style.display = 'none';
+            document.getElementById('retry-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('check-btn').style.display = 'block';
+            document.getElementById('prev-btn').disabled = (index === 0);
+
+            const optsDiv = document.getElementById('opts');
+            optsDiv.innerHTML = "";
+            data.opts.forEach((o, i) => {
+                const div = document.createElement('div');
+                div.className = 'opt-item';
+                if(statusMap[index] !== null) {
+                    if(i === data.a) div.classList.add('correct');
+                    document.getElementById('check-btn').style.display = 'none';
+                    document.getElementById('next-btn').style.display = 'block';
+                    showBox();
+                }
+                div.innerText = o;
+                div.onclick = () => {
+                    if(statusMap[index] !== null) return;
+                    document.querySelectorAll('.opt-item').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    chosen = i;
+                };
+                optsDiv.appendChild(div);
+            });
+            renderNav();
+        }
+
+        function renderNav() {
+            const container = document.getElementById('numbers');
+            container.innerHTML = "";
+            quizData.forEach((_, i) => {
+                const div = document.createElement('div');
+                div.className = 'num-box';
+                if(i === index) div.classList.add('active');
+                if(statusMap[i] === 'correct') div.classList.add('answered-correct');
+                if(statusMap[i] === 'wrong') div.classList.add('answered-wrong');
+                div.innerText = i + 1;
+                div.onclick = () => { index = i; chosen = null; loadQ(); };
+                container.appendChild(div);
+            });
+        }
+
+        function verify() {
+            if(chosen === null) return alert("Pilih jawaban dahulu!");
+            const correct = quizData[index].a;
+            const items = document.querySelectorAll('.opt-item');
+
+            if(chosen === correct) {
+                statusMap[index] = 'correct';
+            } else {
+                statusMap[index] = 'wrong';
+                items[chosen].classList.add('wrong');
+                document.getElementById('retry-btn').style.display = 'block';
+            }
+            items[correct].classList.add('correct');
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'block';
+            showBox();
+            renderNav();
+        }
+
+        function showBox() {
+            const resBox = document.getElementById('result-info');
+            if(statusMap[index] === 'correct') {
+                resBox.innerHTML = "<b>BENAR!</b> Jawaban Anda sudah tepat";
+                resBox.className = "result-box correct";
+            } else {
+                resBox.innerHTML = `<b>SALAH.</b><br>${quizData[index].expl}`;
+                resBox.className = "result-box wrong";
+            }
+            resBox.style.display = 'block';
+        }
+
+        function resetQ() {
+            statusMap[index] = null;
+            chosen = null;
+            loadQ();
+        }
+
+        function move(step) {
+            index += step;
+            if(index >= 0 && index < quizData.length) {
+                chosen = null;
+                loadQ();
+            } else if (index >= quizData.length) {
+                alert("Selamat! Kuis Selesai. Tetap Utamakan Keselamatan!");
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
